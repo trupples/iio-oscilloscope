@@ -85,6 +85,14 @@ struct w_info {
 	const char * const name;
 };
 
+/* Container for passing both the progress bar and fraction to
+ * set_calibration_progress_ui.
+ * Allocated by caller, freed by callee. */
+struct set_calibration_progress_params {
+	GtkProgressBar *pbar;
+	float fraction;
+};
+
 static struct w_info attrs[] = {
 	{SPINBUTTON, "adi,agc-adc-large-overload-exceed-counter"},
 	{SPINBUTTON, "adi,agc-adc-large-overload-inc-steps"},
@@ -814,17 +822,27 @@ static int get_cal_samples(long long cal_tone, long long cal_freq)
 	return env_samples;
 }
 
-static void set_calibration_progress(GtkProgressBar *pbar, float fraction)
-{
-	if (gtk_widget_get_visible(GTK_WIDGET(pbar))) {
+static bool set_calibration_progress_ui(struct set_calibration_progress_params *params) {
+	if (gtk_widget_get_visible(GTK_WIDGET(params->pbar))) {
 		char ptext[64];
 
-		gdk_threads_enter();
-		snprintf(ptext, sizeof(ptext), "Calibration Progress (%.2f %%)", fraction * 100);
-		gtk_progress_bar_set_text(pbar, ptext);
-		gtk_progress_bar_set_fraction(pbar, fraction);
-		gdk_threads_leave();
+		snprintf(ptext, sizeof(ptext), "Calibration Progress (%.2f %%)", params->fraction * 100);
+		gtk_progress_bar_set_text(params->pbar, ptext);
+		gtk_progress_bar_set_fraction(params->pbar, params->fraction);
 	}
+
+	free(params);
+
+	return false;
+}
+
+static void set_calibration_progress(GtkProgressBar *pbar, float fraction)
+{
+	struct set_calibration_progress_params *params = malloc(sizeof(struct set_calibration_progress_params));
+	params->pbar = pbar;
+	params->fraction = fraction;
+
+	gdk_threads_add_idle(G_SOURCE_FUNC(set_calibration_progress_ui), params);
 }
 
 static void calibrate (gpointer button)

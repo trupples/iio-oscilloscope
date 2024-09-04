@@ -4798,11 +4798,6 @@ void cb_saveas_response(GtkDialog *dialog, gint response_id, OscPlot *plot)
 	gtk_widget_hide(priv->saveas_dialog);
 
 	if (priv->save_as_png) {
-		int i = 0, timeout = 1000;
-		while (gtk_events_pending() && i < timeout) {
-			i++;
-			gtk_main_iteration();
-		}
 		screenshot_saveas_png(plot);
 		priv->save_as_png = false;
 	}
