@@ -440,9 +440,8 @@ static struct iio_context * get_context(Dialogs *data)
 
 /* Change UI state to indicate the USB device list is being refreshed.
  * Not thread safe by itself - should be queued using gdk_threads_add_idle(), not g_idle_add_full() */
-static bool refresh_usb_clear(void *)
+static bool refresh_usb_clear(void *UNUSED(param))
 {
-
 	gtk_list_store_clear(GTK_LIST_STORE(gtk_combo_box_get_model(GTK_COMBO_BOX(dialogs.connect_usbd))));
 	widget_set_cursor(dialogs.connect, GDK_WATCH);
 
